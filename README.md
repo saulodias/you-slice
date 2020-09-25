@@ -1,6 +1,6 @@
 # YouSlice
 
-YouSlice downloads a YouTube video and slices it into several equal parts of 30 seconds by default. Usefull to share full videos on WhatApp status.
+YouSlice downloads a YouTube video and slices it into several equal parts of 30 seconds by default. Useful to share full videos on WhatsApp status.
 
 ## Installation
 
