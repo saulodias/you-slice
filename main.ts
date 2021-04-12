@@ -19,25 +19,42 @@ video.on('info', info => {
   durationSecs = info._duration_raw;
 });
 video.pipe(fs.createWriteStream('video.mp4'));
-video.on('end', () => sliceVideo());
+video.on('end', () => { 
+  sliceVideo(durationSecs);
+});
 
-function sliceVideo(interval: number = 30) {
-  const baseName = 'video';
+const sliceVideo = (durationSecs: number, interval: number = 30) => {
   const startTimes = [];
-  for (let i = 0; i < Math.ceil(durationSecs / interval); i++) startTimes.push(i * interval)
-  console.log(`Converting ${duration} of video into ${startTimes.length} parts of ${interval} seconds or less...`)
-  startTimes.forEach((startTime, i) => {
-    ffmpeg('video.mp4')
-      .setStartTime(startTime)
-      .setDuration(interval)
-      .output(`${baseName}_part_${i+1}.mp4`)
-      .on('end', function (err) {
-        if (!err) {
-          console.log(`Converted part ${i+1}/${startTimes.length}`)
-        }
-      })
-      .on('error', function (err) {
-        console.log('error: ', err)
-      }).run()
-  });
+  for (let i = 0; i < Math.ceil(durationSecs / interval); i++) startTimes.push(i * interval);
+  const totalParts = startTimes.length;
+  console.log(`Converting video into ${totalParts} parts of ${interval} seconds or less...`)
+
+  let i = 1;
+  let startTime = startTimes.shift();
+  const callBack = () => { 
+    process.stdout.write(`\rProgress: ${Math.round(i*100/totalParts)} %`);
+
+    i++;
+    startTime = startTimes.shift();
+    if(startTime) {
+      createSlice(startTime, interval, i, callBack)
+    }
+  }
+  createSlice(startTime, interval, i, callBack)
+
+}
+
+const createSlice = (startTime: number, interval: number, index: number, cb) => {
+  ffmpeg('video.mp4')
+    .setStartTime(startTime)
+    .setDuration(interval)
+    .output(`video_part_${index}.mp4`)
+    .on('end', function (err) {
+      if (!err) {
+        cb();
+      }
+    })
+    .on('error', function (err) {
+      console.log('error: ', err)
+    }).run()
 }
